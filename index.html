@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Quotation</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffdf8;
+      --ink: #151515;
+      --muted: #77736b;
+      --line: #d8d0c4;
+      --soft: #ebe5da;
+      --placeholder: #b8afa3;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.45;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      width: min(1120px, calc(100% - 48px));
+      margin: 24px auto -24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .toolbar button,
+    .add-row-button,
+    .section-add-button {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 10px 14px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .toolbar .ghost,
+    .add-row-button.ghost,
+    .section-add-button.ghost {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 48px));
+      margin: 48px auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
+    }
+
+    .hero {
+      padding: 54px 58px 44px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: end;
+    }
+
+    .brand {
+      letter-spacing: -0.05em;
+      font-size: 52px;
+      line-height: 0.9;
+      font-weight: 650;
+      margin: 0 0 18px;
+      outline: none;
+      display: inline-block;
+      min-width: 260px;
+    }
+
+    .brand:empty::before,
+    .editable:empty::before,
+    .price-input:empty::before {
+      content: attr(data-placeholder);
+      color: var(--placeholder);
+    }
+
+    .title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .meta {
+      justify-self: end;
+      width: min(360px, 100%);
+      border-top: 1px solid var(--ink);
+      padding-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .meta-row span:last-child { color: var(--ink); text-align: right; }
+
+    .editable {
+      min-width: 150px;
+      padding: 2px 0;
+      border-bottom: 1px solid var(--line);
+      outline: none;
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .date-input {
+      min-width: 150px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      text-align: right;
+      outline: none;
+      padding: 2px 0;
+    }
+
+    .date-input::-webkit-calendar-picker-indicator { opacity: 0.45; cursor: pointer; }
+
+    .content { padding: 18px 58px 58px; }
+
+    .builder {
+      margin-top: 38px;
+      padding: 22px 24px;
+      background: var(--soft);
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .builder-title {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .builder-title strong {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 560;
+      margin-bottom: 4px;
+    }
+
+    .section { margin-top: 38px; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .section h2 { margin: 0; font-size: 18px; font-weight: 560; letter-spacing: -0.01em; }
+
+    .section-code {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 13px 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    td { padding: 14px 0; border-bottom: 1px solid var(--soft); vertical-align: middle; }
+
+    th:nth-child(1), td:nth-child(1) { width: 48%; padding-right: 24px; }
+    th:nth-child(2), td:nth-child(2) { width: 24%; padding-right: 24px; color: var(--muted); }
+    th:nth-child(3), td:nth-child(3) { width: 28%; }
+
+    .select-wrap,
+    .service-cell,
+    .unit-cell,
+    .price-control { position: relative; }
+
+    .select-wrap::after,
+    .service-cell::after,
+    .unit-cell::after,
+    .price-control::after {
+      content: "⌄";
+      position: absolute;
+      right: 2px;
+      top: 18px;
+      color: var(--placeholder);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    select,
+    .unit-select,
+    .price-mode {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      line-height: 1.35;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+      padding: 2px 18px 2px 0;
+    }
+
+    select:focus,
+    .unit-select:focus,
+    .price-mode:focus { border-bottom-color: var(--line); color: var(--ink); }
+
+    .service-custom {
+      margin-top: 6px;
+      border-bottom: 1px solid var(--line);
+      outline: none;
+      color: var(--ink);
+      min-height: 24px;
+      display: none;
+    }
+
+    .service-custom:empty::before { content: attr(data-placeholder); color: var(--placeholder); }
+
+    .price-control { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    .price-mode { font-size: 12px; }
+
+    .price-input {
+      width: 100%;
+      min-height: 28px;
+      padding: 4px 0 3px;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      outline: none;
+      color: var(--ink);
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .price-input.is-disabled { display: none; }
+
+    .price-label {
+      color: var(--ink);
+      font-size: 14px;
+      border-bottom: 1px solid var(--line);
+      padding: 4px 0 3px;
+      min-height: 28px;
+    }
+
+    .row-actions {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid var(--line);
+      padding: 3px 8px;
+      line-height: 1;
+    }
+
+    .row-actions:hover {
+      color: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .empty-state {
+      margin-top: 38px;
+      padding: 32px 24px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .summary {
+      margin-top: 42px;
+      padding-top: 22px;
+      border-top: 1.5px solid var(--ink);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .summary-box { width: min(380px, 100%); }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--soft);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary-row.total {
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 560;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .summary-value { color: var(--ink); text-align: right; white-space: nowrap; }
+
+    .note {
+      margin-top: 42px;
+      padding: 22px 24px;
+      background: var(--soft);
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .note strong { color: var(--ink); font-weight: 560; letter-spacing: 0.08em; text-transform: uppercase; }
+    .note-text { outline: none; }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 58px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .is-hidden-for-export { display: none !important; }
+
+    @page { size: A4; margin: 12mm; }
+
+    @media print {
+      .toolbar, .builder, .section-add-button, .row-actions, .empty-state { display: none !important; }
+      body { background: #fff; }
+      .page { width: 100%; margin: 0; box-shadow: none; border: none; }
+      [contenteditable="true"] { outline: none; }
+      .brand:empty::before,
+      .editable:empty::before,
+      .price-input:empty::before { content: ""; }
+      .select-wrap::after,
+      .service-cell::after,
+      .unit-cell::after,
+      .price-control::after { display: none; }
+      select,
+      .unit-select,
+      .price-mode { appearance: none; border-bottom: none; color: var(--muted); }
+      .service-custom { border-bottom: none; }
+    }
+
+    @media (max-width: 760px) {
+      .toolbar, .page { width: calc(100% - 24px); }
+      .page { margin: 12px auto; }
+      .hero, .content, .footer { padding-left: 22px; padding-right: 22px; }
+      .hero { grid-template-columns: 1fr; gap: 24px; }
+      .brand { font-size: 42px; }
+      .meta { justify-self: stretch; }
+      .builder { align-items: flex-start; flex-direction: column; }
+      table { table-layout: auto; }
+      th:nth-child(1), td:nth-child(1),
+      th:nth-child(2), td:nth-child(2),
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(4), td:nth-child(4) { width: auto; }
+      .note { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="ghost" type="button" id="clearButton">Clear</button>
+    <button type="button" id="exportButton">Export Clean PDF</button>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <div>
+        <h1 class="brand" id="brandName" contenteditable="true" data-placeholder="YOUR BRAND / 品牌名称"></h1>
+        <p class="title">服务报价单 / Service Quotation</p>
+        <p class="subtitle">Creative · Production · Post-production · Consulting</p>
+      </div>
+      <div class="meta">
+        <div class="meta-row"><span>Client</span><span class="editable" contenteditable="true" data-placeholder="客户名称"></span></div>
+        <div class="meta-row"><span>Project</span><span class="editable" contenteditable="true" data-placeholder="项目名称"></span></div>
+        <div class="meta-row"><span>Date</span><input class="date-input" id="quoteDate" type="date" /></div>
+      </div>
+    </header>
+
+    <section class="content">
+      <div class="builder" id="builderPanel">
+        <div class="builder-title">
+          <strong>选择报价项目 / Select Quotation Items</strong>
+          类别已按流程列出。请在对应类别下点击 “+” 添加子项目。
+        </div>
+      </div>
+
+      <div id="emptyState" class="empty-state">暂无报价项目。请在下方类别中点击 “+ Add” 添加需要报价的服务。</div>
+      <div id="sectionsRoot"></div>
+
+      <div class="summary" id="summaryBox">
+        <div class="summary-box">
+          <div class="summary-row"><span>Quoted Items</span><span class="summary-value" id="quotedCount">0</span></div>
+          <div class="summary-row"><span>Non-fixed Items</span><span class="summary-value" id="nonFixedCount">0</span></div>
+          <div class="summary-row total"><span>Total</span><span class="summary-value" id="grandTotal">RMB 0</span></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Notes</strong>
+        <div class="note-text" contenteditable="true">
+          以上报价均为不含税价格。如客户需要开具发票，税费将根据实际开票类型及适用税率另行计算。报价可根据项目规模、工作周期、交付数量及修改轮次进行调整。涉及交通、餐饮、住宿、采购、保险、场地许可等第三方费用，可按实际发生金额实报实销。<br />
+          All prices listed above are exclusive of tax. If an invoice is required, applicable taxes will be calculated separately based on the invoice type and relevant tax rate. Final pricing may vary depending on project scope, timeline, deliverables and revision rounds. Third-party costs such as transportation, meals, accommodation, purchases, insurance and permits may be billed at actual cost.
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span><span id="footerBrand">—</span> Quotation Template</span>
+      <span>Prepared for Client Review</span>
+    </footer>
+  </main>
+
+  <script>
+    const UNIT_OPTIONS = [
+      { value: "half-day-day", label: "半天 / 天 · Half Day / Day" },
+      { value: "hour", label: "小时 · Per Hour" },
+      { value: "day", label: "天 · Per Day" },
+      { value: "project", label: "项 · Per Project" },
+      { value: "project-day", label: "项 / 天 · Project / Day" },
+      { value: "image", label: "张 · Per Image" },
+      { value: "image-project", label: "张 / 项 · Image / Project" },
+      { value: "image-set", label: "张 / 组 · Image / Set" },
+      { value: "image-set-project", label: "张 / 组 / 项 · Image / Set / Project" },
+      { value: "design-project", label: "张 / 项 · Design / Project" },
+      { value: "page", label: "页 · Per Page" },
+      { value: "page-project", label: "页 / 项 · Page / Project" },
+      { value: "video", label: "条 · Per Video" },
+      { value: "video-day", label: "条 / 天 · Video / Day" },
+      { value: "video-minute", label: "条 / 分钟 · Video / Minute" },
+      { value: "video-project", label: "条 / 项 · Video / Project" },
+      { value: "shot", label: "镜头 · Per Shot" },
+      { value: "shot-project", label: "镜头 / 项 · Shot / Project" },
+      { value: "video-shot-project", label: "条 / 镜头 / 项 · Video / Shot / Project" },
+      { value: "set", label: "组 · Per Set" },
+      { value: "set-project", label: "组 / 项 · Set / Project" },
+      { value: "hour-half-day-day", label: "小时 / 半天 / 天 · Hour / Half Day / Day" },
+      { value: "person-day", label: "人 / 天 · Person / Day" },
+      { value: "person-meal", label: "人 / 餐 · Person / Meal" },
+      { value: "vehicle-day", label: "车 / 天 · Vehicle / Day" },
+      { value: "trip", label: "趟 · Per Trip" },
+      { value: "actual-cost", label: "实报实销 · Actual Cost" },
+      { value: "permit", label: "许可 / 项 · Permit / Project" },
+      { value: "insurance", label: "人 / 项 · Person / Project" },
+      { value: "month", label: "月 · Per Month" },
+      { value: "session", label: "次 · Per Session" },
+      { value: "custom", label: "自定义 · Custom" }
+    ];
+
+    const PRICE_OPTIONS = [
+      { value: "empty", label: "选择价格 · Select", display: "—" },
+      { value: "fixed", label: "具体价格 · Fixed", display: "" },
+      { value: "actual-cost", label: "实报实销 · Actual Cost", display: "实报实销 · Actual Cost" },
+      { value: "tbd", label: "待确认 · TBD", display: "待确认 · TBD" },
+      { value: "included", label: "已包含 · Included", display: "已包含 · Included" },
+      { value: "waived", label: "减免 · Waived", display: "减免 · Waived" }
+    ];
+
+    const CATALOG = [
+      { category: "前期策划 / Pre-production", code: "01 / Planning", items: [
+        ["创意策划", "Creative Planning", "project"],
+        ["视觉方案 / Moodboard", "Visual Direction / Moodboard", "project"],
+        ["拍摄脚本", "Shooting Script", "project"],
+        ["分镜脚本", "Storyboard", "set-project"],
+        ["拍摄方案 / PPM 文件", "Production Plan / PPM Deck", "project"],
+        ["场地勘景", "Location Scouting", "day"],
+        ["选角 / 模特筛选", "Casting / Talent Selection", "project"],
+        ["自定义", "Custom Item", "project"]
+      ]},
+      { category: "美术与造型 / Art Department & Styling", code: "02 / Art", items: [
+        ["美术指导", "Art Director", "half-day-day"],
+        ["置景设计", "Set Design", "project-day"],
+        ["道具执行", "Props Styling / Props Sourcing", "project-day"],
+        ["服装造型", "Wardrobe Styling", "half-day-day"],
+        ["化妆师", "Makeup Artist", "half-day-day"],
+        ["发型师", "Hair Stylist", "half-day-day"],
+        ["道具 / 服装采购", "Props / Wardrobe Purchase", "actual-cost"],
+        ["自定义", "Custom Item", "project"]
+      ]},
+      { category: "拍摄执行 / Shooting Crew", code: "03 / Shooting", items: [
+        ["导演", "Director", "half-day-day"],
+        ["平面摄影师", "Still Photographer", "half-day-day"],
+        ["摄影指导", "Director of Photography / DP", "half-day-day"],
+        ["摄像师", "Videographer / Camera Operator", "half-day-day"],
+        ["摄影助理", "Camera Assistant", "half-day-day"],
+        ["灯光师", "Gaffer / Lighting Technician", "half-day-day"],
+        ["灯光助理", "Lighting Assistant", "half-day-day"],
+        ["收音师", "Sound Recordist", "half-day-day"],
+        ["录音助理", "Sound Assistant", "half-day-day"],
+        ["航拍飞手", "Drone Operator", "half-day-day"],
+        ["DIT / 数据管理", "DIT / Data Management", "half-day-day"],
+        ["场地 / 影棚", "Studio / Location Rental", "hour-half-day-day"],
+        ["摄影 / 灯光 / 收音设备", "Camera / Lighting / Sound Equipment", "actual-cost"],
+        ["自定义", "Custom Item", "project"]
+      ]},
+      { category: "现场制片与后勤 / Production Support & Logistics", code: "04 / Logistics", items: [
+        ["制片人", "Producer", "project-day"],
+        ["执行制片", "Line Producer", "project-day"],
+        ["现场制片", "On-site Producer / Production Coordinator", "half-day-day"],
+        ["项目统筹", "Project Coordinator", "project-day"],
+        ["场务", "Production Assistant / Runner", "half-day-day"],
+        ["交通 / 路费", "Transportation / Travel Expenses", "actual-cost"],
+        ["车辆租赁", "Vehicle Rental", "vehicle-day"],
+        ["人员餐饮", "Crew Meals", "person-meal"],
+        ["住宿", "Accommodation", "person-day"],
+        ["人员保险", "Crew Insurance", "insurance"],
+        ["场地许可 / 拍摄报备", "Location Permit / Filming Permit", "permit"],
+        ["加班 / 超时费用", "Overtime", "hour"],
+        ["自定义", "Custom Item", "project"]
+      ]},
+      { category: "图像后期 / Image Retouching & Post-production", code: "05 / AI Image", items: [
+        ["基础修图", "Basic Photo Retouching", "image"],
+        ["高级精修", "Advanced Retouching", "image"],
+        ["基础调色", "Basic Color Correction", "image"],
+        ["商业合成", "Commercial Compositing", "image-project"],
+        ["AI 扩图 / 补图", "AI Outpainting / Generative Fill", "image"],
+        ["AI 换背景", "AI Background Replacement", "image"],
+        ["AI 产品图生成", "AI Product Image Generation", "image-set-project"],
+        ["AI 人像优化", "AI Portrait Enhancement", "image"],
+        ["AI 风格化图像", "AI Stylized Image Generation", "image-set"],
+        ["海报设计", "Poster Design", "design-project"],
+        ["排版设计", "Layout Design", "page-project"],
+        ["自定义", "Custom Item", "project"]
+      ]},
+      { category: "视频后期 / Video Post-production", code: "06 / AI Video", items: [
+        ["素材整理", "Footage Organization", "project"],
+        ["视频粗剪", "Rough Cut Editing", "video-day"],
+        ["视频精剪", "Fine Cut Editing", "video-day"],
+        ["视频调色", "Color Grading", "video-minute"],
+        ["后期包装", "Motion Graphics", "video-project"],
+        ["字幕制作", "Subtitling / Captioning", "video-minute"],
+        ["声音剪辑 / 音频清理", "Sound Editing / Audio Cleanup", "video-project"],
+        ["混音", "Audio Mixing", "video-project"],
+        ["特效合成", "VFX / Compositing", "shot-project"],
+        ["AI 视频扩展 / 补帧", "AI Video Extension / Frame Interpolation", "video-minute"],
+        ["AI 视频降噪 / 修复", "AI Video Denoising / Restoration", "video-minute"],
+        ["AI 自动字幕 / 翻译", "AI Captioning / Translation", "video-minute"],
+        ["AI 口播清理 / 声音优化", "AI Speech Cleanup / Voice Enhancement", "video-minute"],
+        ["AI 视频生成", "AI Video Generation", "video-shot-project"],
+        ["AI 分镜生成", "AI Storyboard Generation", "set-project"],
+        ["自定义", "Custom Item", "project"]
+      ]}
+    ];
+
+    const brandName = document.getElementById("brandName");
+    const footerBrand = document.getElementById("footerBrand");
+    const quoteDate = document.getElementById("quoteDate");
+    const sectionsRoot = document.getElementById("sectionsRoot");
+    const emptyState = document.getElementById("emptyState");
+    const grandTotal = document.getElementById("grandTotal");
+    const quotedCount = document.getElementById("quotedCount");
+    const nonFixedCount = document.getElementById("nonFixedCount");
+    const clearButton = document.getElementById("clearButton");
+    const exportButton = document.getElementById("exportButton");
+    
+
+    let quoteItems = [];
+    let nextItemId = 1;
+
+    function makeOption(value, label, selectedValue) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      if (value === selectedValue) option.selected = true;
+      return option;
+    }
+
+    function cleanText(element) {
+      if (!element) return "";
+      const raw = element.textContent || "";
+      return raw.split(String.fromCharCode(160)).join(" ").trim();
+    }
+
+    function getTodayISODate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      return year + "-" + month + "-" + day;
+    }
+
+    function initQuoteDate() {
+      quoteDate.value = getTodayISODate();
+    }
+
+    function getBrandLabel() {
+      return cleanText(brandName) || "Quotation";
+    }
+
+    function getProjectLabel() {
+      const fields = document.querySelectorAll(".meta .editable");
+      return fields.length > 1 ? cleanText(fields[1]) : "";
+    }
+
+    function buildDocumentTitle() {
+      const brand = getBrandLabel();
+      const project = getProjectLabel();
+      return project ? brand + " Quotation - " + project : brand + " Quotation";
+    }
+
+    function syncBrandName() {
+      const name = getBrandLabel();
+      footerBrand.textContent = name;
+      document.title = buildDocumentTitle();
+    }
+
+    function getCurrencyLabel() { return "RMB"; }
+
+    function parsePriceValue(text) {
+      if (!text) return 0;
+      const cleaned = text
+        .split(",").join("")
+        .split("，").join("")
+        .split("¥").join("")
+        .split("￥").join("")
+        .split(String.fromCharCode(36)).join("")
+        .replace(/rmb/gi, "")
+        .replace(/cny/gi, "")
+        .replace(/usd/gi, "")
+        .trim();
+
+      let numberText = "";
+      let hasDot = false;
+      for (let i = 0; i < cleaned.length; i += 1) {
+        const char = cleaned.charAt(i);
+        if (char >= "0" && char <= "9") numberText += char;
+        else if (char === "." && !hasDot) { numberText += char; hasDot = true; }
+        else if (numberText.length > 0) break;
+      }
+      return numberText ? Number(numberText) : 0;
+    }
+
+    function formatMoney(value) {
+      const amount = value.toLocaleString("en-US", {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+        maximumFractionDigits: 2
+      });
+      return getCurrencyLabel() + " " + amount;
+    }
+
+    function getCatalogByCategory(category) {
+      return CATALOG.find(function(group) { return group.category === category; }) || CATALOG[0];
+    }
+
+    function getServiceByName(category, serviceName) {
+      const group = getCatalogByCategory(category);
+      return group.items.find(function(item) { return item[0] === serviceName; }) || group.items[0];
+    }
+
+    function addQuoteItem(category) {
+      const group = getCatalogByCategory(category || CATALOG[0].category);
+      const item = group.items[0];
+      quoteItems.push({
+        id: nextItemId,
+        category: group.category,
+        serviceCn: item[0],
+        serviceEn: item[1],
+        unit: item[2],
+        priceMode: "empty",
+        priceText: "",
+        customText: ""
+      });
+      nextItemId += 1;
+      renderQuoteItems();
+    }
+
+    function removeQuoteItem(id) {
+      quoteItems = quoteItems.filter(function(item) { return item.id !== id; });
+      renderQuoteItems();
+    }
+
+    function updateItem(id, patch) {
+      quoteItems = quoteItems.map(function(item) {
+        if (item.id !== id) return item;
+        return Object.assign({}, item, patch);
+      });
+      updateTotal();
+    }
+
+    function renderQuoteItems() {
+      sectionsRoot.innerHTML = "";
+      emptyState.style.display = quoteItems.length === 0 ? "block" : "none";
+
+      CATALOG.forEach(function(group) {
+        const section = document.createElement("section");
+        section.className = "section";
+        section.dataset.category = group.category;
+
+        const head = document.createElement("div");
+        head.className = "section-head";
+        const title = document.createElement("h2");
+        title.textContent = group.category;
+        const right = document.createElement("div");
+        right.style.display = "flex";
+        right.style.alignItems = "center";
+        right.style.gap = "14px";
+        const code = document.createElement("span");
+        code.className = "section-code";
+        code.textContent = group.code;
+        const add = document.createElement("button");
+        add.type = "button";
+        add.className = "section-add-button ghost";
+        add.textContent = "+ Add";
+        add.addEventListener("click", function() { addQuoteItem(group.category); });
+        right.appendChild(code);
+        right.appendChild(add);
+        head.appendChild(title);
+        head.appendChild(right);
+
+        const rows = quoteItems.filter(function(item) { return item.category === group.category; });
+        const table = document.createElement("table");
+        if (rows.length === 0) {
+          table.className = "is-empty-category";
+        }
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Service</th><th>Unit</th><th>Price</th></tr>";
+
+        const tbody = document.createElement("tbody");
+        rows.forEach(function(item) {
+          tbody.appendChild(createQuoteRow(item));
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        section.appendChild(head);
+        if (rows.length > 0) {
+          section.appendChild(table);
+        }
+        sectionsRoot.appendChild(section);
+      });
+
+      updateTotal();
+    }
+
+    function createQuoteRow(item) {
+      const tr = document.createElement("tr");
+      tr.dataset.itemId = String(item.id);
+
+      const serviceTd = document.createElement("td");
+      const serviceWrap = document.createElement("div");
+      serviceWrap.className = "service-cell";
+      const serviceSelect = document.createElement("select");
+      const group = getCatalogByCategory(item.category);
+      group.items.forEach(function(service) {
+        serviceSelect.appendChild(makeOption(service[0], service[0] + " · " + service[1], item.serviceCn));
+      });
+      serviceSelect.addEventListener("change", function() {
+        const selected = getServiceByName(item.category, serviceSelect.value);
+        updateItem(item.id, {
+          serviceCn: selected[0],
+          serviceEn: selected[1],
+          unit: selected[2],
+          customText: ""
+        });
+        renderQuoteItems();
+      });
+      serviceWrap.appendChild(serviceSelect);
+      serviceTd.appendChild(serviceWrap);
+
+      const custom = document.createElement("div");
+      custom.className = "service-custom";
+      custom.contentEditable = "true";
+      custom.dataset.placeholder = "自定义项目 / Custom item";
+      custom.textContent = item.customText;
+      custom.style.display = item.serviceCn === "自定义" ? "block" : "none";
+      custom.addEventListener("input", function() {
+        updateItem(item.id, { customText: cleanText(custom) });
+      });
+      serviceTd.appendChild(custom);
+
+      const unitTd = document.createElement("td");
+      unitTd.className = "unit-cell";
+      const unitSelect = document.createElement("select");
+      unitSelect.className = "unit-select";
+      UNIT_OPTIONS.forEach(function(option) {
+        unitSelect.appendChild(makeOption(option.value, option.label, item.unit));
+      });
+      unitSelect.addEventListener("change", function() {
+        updateItem(item.id, { unit: unitSelect.value });
+      });
+      unitTd.appendChild(unitSelect);
+
+      const priceTd = document.createElement("td");
+      priceTd.appendChild(createPriceControl(item));
+      const remove = document.createElement("div");
+      remove.className = "row-actions";
+      remove.textContent = "− Remove";
+      remove.addEventListener("click", function() { removeQuoteItem(item.id); });
+      priceTd.appendChild(remove);
+
+      tr.appendChild(serviceTd);
+      tr.appendChild(unitTd);
+      tr.appendChild(priceTd);
+      return tr;
+    }
+
+    function createPriceControl(item) {
+      const control = document.createElement("div");
+      control.className = "price-control";
+
+      const mode = document.createElement("select");
+      mode.className = "price-mode";
+      PRICE_OPTIONS.forEach(function(option) {
+        mode.appendChild(makeOption(option.value, option.label, item.priceMode));
+      });
+
+      const input = document.createElement("div");
+      input.className = "price-input";
+      input.contentEditable = "true";
+      input.dataset.placeholder = "填写金额";
+      input.textContent = item.priceText;
+
+      const label = document.createElement("div");
+      label.className = "price-label";
+
+      function applyMode() {
+        const selected = PRICE_OPTIONS.find(function(option) { return option.value === mode.value; }) || PRICE_OPTIONS[0];
+        if (mode.value === "fixed") {
+          input.classList.remove("is-disabled");
+          label.style.display = "none";
+        } else {
+          input.classList.add("is-disabled");
+          input.textContent = "";
+          label.style.display = "block";
+          label.textContent = selected.display;
+        }
+      }
+
+      mode.addEventListener("change", function() {
+        updateItem(item.id, { priceMode: mode.value, priceText: mode.value === "fixed" ? item.priceText : "" });
+        applyMode();
+        updateTotal();
+      });
+
+      input.addEventListener("input", function() {
+        updateItem(item.id, { priceText: cleanText(input) });
+      });
+
+      control.appendChild(mode);
+      control.appendChild(input);
+      control.appendChild(label);
+      applyMode();
+      return control;
+    }
+
+    function getServiceDisplay(item) {
+      if (item.serviceCn === "自定义") {
+        return item.customText || "自定义项目 / Custom Item";
+      }
+      return item.serviceCn + " / " + item.serviceEn;
+    }
+
+    function isQuotedItem(item) {
+      if (item.priceMode === "fixed") return item.priceText.trim() !== "";
+      return item.priceMode !== "empty";
+    }
+
+    function updateTotal() {
+      let total = 0;
+      let count = 0;
+      let nonFixed = 0;
+
+      quoteItems.forEach(function(item) {
+        if (!isQuotedItem(item)) return;
+        count += 1;
+        if (item.priceMode === "fixed") {
+          total += parsePriceValue(item.priceText);
+        } else {
+          nonFixed += 1;
+        }
+      });
+
+      quotedCount.textContent = String(count);
+      nonFixedCount.textContent = String(nonFixed);
+      grandTotal.textContent = nonFixed > 0 ? formatMoney(total) + " + non-fixed" : formatMoney(total);
+    }
+
+    function clearAllFields() {
+      document.querySelectorAll(".editable").forEach(function(element) { element.innerHTML = ""; });
+      quoteItems = [];
+      renderQuoteItems();
+      initQuoteDate();
+      syncBrandName();
+      updateTotal();
+    }
+
+    function prepareQuotedItemsOnly() {
+      document.querySelectorAll(".is-hidden-for-export").forEach(function(element) {
+        element.classList.remove("is-hidden-for-export");
+      });
+
+      document.querySelectorAll("tbody tr").forEach(function(row) {
+        const id = Number(row.dataset.itemId);
+        const item = quoteItems.find(function(entry) { return entry.id === id; });
+        if (!item || !isQuotedItem(item)) row.classList.add("is-hidden-for-export");
+      });
+
+      document.querySelectorAll(".section").forEach(function(section) {
+        const visibleRows = section.querySelectorAll("tbody tr:not(.is-hidden-for-export)");
+        if (visibleRows.length === 0) section.classList.add("is-hidden-for-export");
+      });
+    }
+
+    function restoreAfterExport() {
+      document.querySelectorAll(".is-hidden-for-export").forEach(function(element) {
+        element.classList.remove("is-hidden-for-export");
+      });
+    }
+
+    function exportQuotedItemsOnly() {
+      syncBrandName();
+      updateTotal();
+      prepareQuotedItemsOnly();
+      document.title = buildDocumentTitle();
+      alert("导出前请在打印窗口关闭 Headers and footers / 页眉和页脚，否则浏览器会自动加上时间、文件路径和页码。");
+      setTimeout(function() { window.print(); }, 50);
+    }
+
+    function handleBeforePrint() {
+      syncBrandName();
+      updateTotal();
+      prepareQuotedItemsOnly();
+      document.title = buildDocumentTitle();
+    }
+
+    function runSelfTests() {
+      console.assert(Array.isArray(CATALOG) && CATALOG.length === 6, "six catalog groups are configured");
+      console.assert(UNIT_OPTIONS.some(function(item) { return item.value === "actual-cost"; }), "actual cost unit exists");
+      console.assert(PRICE_OPTIONS.some(function(item) { return item.value === "actual-cost"; }), "actual cost price mode exists");
+      console.assert(parsePriceValue("RMB 1,200") === 1200, "price parser handles RMB with comma");
+      addQuoteItem(CATALOG[0].category);
+      console.assert(quoteItems.length === 1, "add item creates one quote item");
+      quoteItems = [];
+      renderQuoteItems();
+    }
+
+    initQuoteDate();
+    renderQuoteItems();
+    syncBrandName();
+    updateTotal();
+    runSelfTests();
+
+    brandName.addEventListener("input", syncBrandName);
+    document.querySelectorAll(".editable").forEach(function(field) {
+      field.addEventListener("input", function() {
+        syncBrandName();
+        updateTotal();
+      });
+    });
+    quoteDate.addEventListener("change", syncBrandName);
+    clearButton.addEventListener("click", clearAllFields);
+    exportButton.addEventListener("click", exportQuotedItemsOnly);
+    window.addEventListener("beforeprint", handleBeforePrint);
+    window.addEventListener("afterprint", restoreAfterExport);
+  </script>
+</body>
+</html>
